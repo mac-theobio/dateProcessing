@@ -3,7 +3,7 @@
 current: target
 -include target.mk
 
-# -include makestuff/perl.def
+-include makestuff/perl.def
 
 vim_session:
 	bash -cl "vmt"
@@ -11,6 +11,16 @@ vim_session:
 ######################################################################
 
 Sources += Makefile README.md
+
+######################################################################
+
+Ignore += secret/
+
+secret:
+	ln -s ~/Dropbox/dateFiles $@
+
+tahawus.subset.xlsx: secret/tahawus.xlsx subset.pl
+	$(PUSH)
 
 ######################################################################
 
