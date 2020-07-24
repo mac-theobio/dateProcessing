@@ -14,11 +14,16 @@ Sources += Makefile README.md
 
 ######################################################################
 
-Ignore += secret/
-
+Ignore += secret
 secret:
 	ln -s ~/Dropbox/dateFiles $@
 
+######################################################################
+
+## 2020 Jul 24 (Fri) Started with perl when subsetting was a problem. Didn't really get anywhere
+
+Sources += subset.pl
+Ignore += tahawus.subset.xlsx
 tahawus.subset.xlsx: secret/tahawus.xlsx subset.pl
 	$(PUSH)
 
