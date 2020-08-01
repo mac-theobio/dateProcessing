@@ -84,7 +84,7 @@ def line_fill_ambiguous_date(ambiguous_column, original_column, searchradius = 5
             
             dates_nearby = np.concatenate([ambiguous_column[max(i-searchradius, 0):i], ambiguous_column[i+1: min(i+1+searchradius, len(ambiguous_column))]]) # Look for dates vertically in the file with a search radius of searchradius
             dates_nearby = sorted(list(filter(lambda x: type(x)==datetime.date, dates_nearby))) # Filter those dates which are actually dates, and non-ambiguous
-            dates_nearby = list(filter(lambda x: (np.abs(x-original_date).days < 365) or (np.abs(x-alternative_date).days < 365), dates_nearby)) # Filter those dates which are within a year of the possible date of comparison
+         #   dates_nearby = list(filter(lambda x: (np.abs(x-original_date).days < 365) or (np.abs(x-alternative_date).days < 365), dates_nearby)) # Filter those dates which are within a year of the possible date of comparison
             
             # If there exist dates nearby, take the median of these dates.
             if dates_nearby != []: 
@@ -152,9 +152,9 @@ def row_fill_ambiguous_date(ambiguous_df, original_df):
     return new_df
 
 
-for sheet_name in ['example1_adj.xlsx', 'example2_adj.xlsx']:
+for sheet_name in ['example1_adj.xlsx']:
     # Load sheet
-    sheet_0 = pd.read_excel(sheet_name) #'example1_adj.xlsx')
+    sheet_0 = pd.read_excel(sheet_name)
 
     initial_valid_date = pd.to_datetime('2020-Feb-01') # Initial time specified in Jonathan's email
 
