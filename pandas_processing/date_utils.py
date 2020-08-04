@@ -1,16 +1,41 @@
-# To add a new cell, type '# %%'
-# To add a new markdown cell, type '# %% [markdown]'
-# %%
-# Imports 
 import pandas as pd
-import datetime
 import numpy as np
+from datetime import datetime
 from os.path import getmtime
 from copy import deepcopy
-# import openpyxl as px
 
+def date_recast(date, start_date, end_date):
+    date1 = date
+    if pd.isna(date1):
+        return np.nan
+    modern_date = pd.to_datetime('1899-Dec-30')    
+    mac_date = pd.to_datetime('1904-Jan-01')    
 
-# %%
+    if type(date1) == int:
+        date1 = pd.Timedelta(date1, unit='d') + modern_date
+    else:
+        date1 = pd.to_datetime(date1, errors='coerce')
+        if pd.isna(date1):
+            return np.nan
+
+    delta = date1 - modern_date
+    internal_integer = int(float(delta.days) + (float(delta.seconds) / 86400))
+
+    dt_modern =  pd.Timedelta(internal_integer, unit='d') + modern_date
+    dt_mac = pd.Timedelta(internal_integer, unit='d') + mac_date
+
+    dt_modern_valid = (dt_modern >= start_date) and (dt_modern <= end_date)
+    dt_mac_valid = (dt_mac >= start_date) and (dt_mac <= end_date)
+
+    if dt_modern_valid and (not dt_mac_valid):
+        return dt_modern.date()
+    elif dt_mac_valid and (not dt_modern_valid):
+        return dt_mac.date()
+    elif dt_modern_valid and dt_mac_valid:
+        return "%Both formats are valid%"
+    elif (not dt_modern_valid) and (not dt_mac_valid):
+        return "%Both formats are invalid%"
+
 def get_unambiguous_date_values(col, initial_valid_date, final_valid_date):
     """
     Given an input date column, return a column cleaned of any invalid dates, while enforcing that each date must be between 
@@ -83,9 +108,8 @@ def line_fill_ambiguous_date(ambiguous_column, original_column, searchradius = 5
             alternative_date = pd.to_datetime(str_original[:4] + '-' + str_original[-2:] + '-' + str_original[5:7]).date()
             
             dates_nearby = np.concatenate([ambiguous_column[max(i-searchradius, 0):i], ambiguous_column[i+1: min(i+1+searchradius, len(ambiguous_column))]]) # Look for dates vertically in the file with a search radius of searchradius
-            dates_nearby = sorted(list(filter(lambda x: type(x)==datetime.date, dates_nearby))) # Filter those dates which are actually dates, and non-ambiguous
-         #   dates_nearby = list(filter(lambda x: (np.abs(x-original_date).days < 365) or (np.abs(x-alternative_date).days < 365), dates_nearby)) # Filter those dates which are within a year of the possible date of comparison
-            
+
+            dates_nearby = sorted(list(filter(lambda x: not pd.isna(pd.to_datetime(x, errors='coerce')), dates_nearby))) # Filter those dates which are actually dates, and non-ambiguous
             # If there exist dates nearby, take the median of these dates.
             if dates_nearby != []: 
                 median_date = dates_nearby[int(len(dates_nearby)/2)]
@@ -97,7 +121,7 @@ def line_fill_ambiguous_date(ambiguous_column, original_column, searchradius = 5
                 new_column.append('%AMBIGUOUS_VALID_DATE%')
             else:
                 # If the median date exists, take the possible date which is closer to the median date. 
-
+  
                 original_date = pd.to_datetime(original_column[i], errors='coerce').date() 
                 str_original = str(original_date)
                 alternative_date = pd.to_datetime(str_original[:4] + '-' + str_original[-2:] + '-' + str_original[5:7]).date()
@@ -128,11 +152,11 @@ def row_fill_ambiguous_date(ambiguous_df, original_df):
 
     for i_row, row in new_df.iterrows():
         for i_col, date in enumerate(row):
-            dates_nearby = sorted(list(filter(lambda x: type(x)==datetime.date, row))) # Consider the other, non-ambiguous dates in each row.
+            dates_nearby = [pd.to_datetime(x) for x in list(filter(lambda x: not pd.isna(pd.to_datetime(x, errors='coerce')), row))] # Consider the other, non-ambiguous dates in each row.
 
             if date == '%AMBIGUOUS_VALID_DATE%': 
                 if dates_nearby != []:
-                    median_date = dates_nearby[int(len(dates_nearby)/2)]
+                    median_date = dates_nearby[int(len(dates_nearby)/2)].date()
                 else:
                     median_date = np.nan
 
@@ -150,56 +174,3 @@ def row_fill_ambiguous_date(ambiguous_df, original_df):
                     new_df.iloc[i_row][i_col] ='%AMBIGUOUS_VALID_DATE%'
 
     return new_df
-
-
-for sheet_name in ['example1_adj.xlsx']:
-    # Load sheet
-    sheet_0 = pd.read_excel(sheet_name)
-
-    initial_valid_date = pd.to_datetime('2020-Feb-01') # Initial time specified in Jonathan's email
-
-    final_valid_date = pd.to_datetime(getmtime(sheet_name), unit='s') # Time of last modification
-
-    # coerce all dates to 2020
-    for col in sheet_0.columns:
-        replacement_row = []
-        if col.find('date') != -1:
-            for date in sheet_0[col]:
-                converted_first_datetime = pd.to_datetime(date, errors='coerce').date() # Attempt to coerce each cell to datetime format.
-                try:
-                    if not pd.isna(converted_first_datetime):
-                        converted_first_datetime = pd.to_datetime("2020" + str(converted_first_datetime)[4:], errors='coerce').date()
-                    else: 
-                        converted_first_datetime = pd.NaT
-                except IndexError:
-                    converted_first_datetime = pd.NaT
-                replacement_row.append(converted_first_datetime)
-            sheet_0[col]= replacement_row
-
-    unambiguous_sheet = pd.DataFrame()
-    for col in sheet_0.columns:
-        if col.find('date') != -1:
-            unambiguous_sheet[col] =get_unambiguous_date_values(sheet_0[col], initial_valid_date, final_valid_date)
-        else: 
-            unambiguous_sheet[col] = sheet_0[col]
-
-    for col in sheet_0.columns:
-        i = 0
-        if col.find('date') != -1:
-            last_col_version = deepcopy(unambiguous_sheet[col])
-            unambiguous_sheet[col] = line_fill_ambiguous_date(unambiguous_sheet[col], sheet_0[col], 7) 
-            while not unambiguous_sheet[col].equals(last_col_version):
-                last_col_version = deepcopy(unambiguous_sheet[col])
-                unambiguous_sheet[col] = line_fill_ambiguous_date(unambiguous_sheet[col], sheet_0[col], 7) 
-                i += 1
-                if i > 100:
-                    break
-            print(i)
-
-    unambiguous_sheet = row_fill_ambiguous_date(unambiguous_sheet, sheet_0)
-
-    unambiguous_sheet.to_excel(sheet_name.split('.')[0] +'_cleaned.xlsx', index=False)
-
-
-
-# %%
