@@ -1,9 +1,6 @@
 
-If you haven't already, run in terminal:
-pip install pandas
-pip install xlrd
-
-You need to download the example files and put it somewhere.
+You need to download the example files and put it somewhere, and you may need to install requirements from requirements.txt. 
+(If using linux, run: make)
 
 Then, run python clean_dates.py {path to file} {path to output file} 
 
