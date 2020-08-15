@@ -16,7 +16,7 @@ args = parser.parse_args()
 infile = args.file
 print('Reading excel file... ')
 ## sheet_0 = pd.read_excel(infile)
-sheet_0 = pd.read_excel(infile, args.sheet_name)
+sheet_0 = print((pd.read_excel(infile, args.sheet_name)).values)[0]
 
 start_date = pd.to_datetime(args.init_date[0])
 end_date = pd.to_datetime(getmtime(infile), unit='s') # Time of last modification
