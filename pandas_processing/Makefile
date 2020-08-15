@@ -1,3 +1,5 @@
+current: target
+
 all: requirements.out example1_adj.xlsx example2_adj.xlsx example1_cleaned.xlsx example2_cleaned.xlsx rm_out
 
 requirements.out: requirements.txt
@@ -18,3 +20,4 @@ example2_cleaned.xlsx: example2_adj.xlsx
 rm_out: requirements.out
 	rm $< 
 
+-include target.mk

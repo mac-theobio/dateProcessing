@@ -45,10 +45,11 @@ Sources += $(wildcard *.R)
 doubleDate.Rout: doubleDate.R example/example1_adj.xlsx
 	$(makeR)
 
-## Nonsense example for Matt
-clean.xlsx: dirty.xlsx script.py
-	python3 -f script.py < dirty.xlsx > clean.xlsx
-	python3 -f script.py --args rowclean=0 < dirty.xlsx > clean.xlsx
+denali.xlsx: secret/denali.xlsx pandas_processing/clean_dates.py
+	python3 pandas_processing/clean_dates.py $< $@ --sheet_name LineList
+
+example1.xlsx: example/example1_adj.xlsx pandas_processing/clean_dates.py
+	python3 pandas_processing/clean_dates.py $< $@ --sheet_name "LineList (2)"
 
 ######################################################################
 
