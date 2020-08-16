@@ -5,7 +5,7 @@ from copy import deepcopy
 parser = argparse.ArgumentParser(description='Clean a file containing dates (with column headers containing "date")')
 parser.add_argument('file', action='store', type=str, help='path to file')
 parser.add_argument('output_file', action='store', type=str, help='path to output file')
-parser.add_argument('--sheet_name', dest='sheet_name', nargs=1, action='store', type=str, help='name of worksheet sheet', default=['Sheet1'])
+parser.add_argument('--sheet_name', dest='sheet_name', nargs=1, action='store', type=str, help='name of worksheet sheet', default=['%DEFAULT_PARAM%'])
 parser.add_argument('--init_date', dest='init_date', nargs=1, action='store', type=str, help='initial date as string. Please do not enter an ambiguous date. Default 2020-Feb-01', default=['2020-Feb-01'])
 parser.add_argument('--fix_mac', dest='fix_mac', nargs=1, action='store', type=int, help='Whether or not to attempt to fix pre-mac 2011 dates. 0 (False) or 1 (True), default 1', default=[1])
 parser.add_argument('--infer_cols', dest='infer_cols', nargs=1, action='store', type=int, help='Whether or not to attempt to infer dates from nearby dates in the same column.  0 (False) or 1 (True), default 1', default=[1])
@@ -15,9 +15,12 @@ args = parser.parse_args()
 
 infile = args.file
 print('Reading excel file... ')
-## sheet_0 = pd.read_excel(infile, arg.sheet_name))
-## sheet_0 = (pd.read_excel(infile, args.sheet_name)).get[args.sheet_name]
-sheet_0 = list(pd.read_excel(infile, args.sheet_name).values())[0]
+
+sheet_name = args.sheet_name[0]
+if sheet_name == '%DEFAULT_PARAM%':
+    print("No sheet name input; defaulting to first sheet in workbook.")
+    sheet_name = 0
+sheet_0 = pd.read_excel(infile, sheet_name=sheet_name)
 
 start_date = pd.to_datetime(args.init_date[0])
 end_date = pd.to_datetime(getmtime(infile), unit='s') # Time of last modification

@@ -152,9 +152,9 @@ def row_fill_ambiguous_date(ambiguous_df, original_df):
 
     for i_row, row in new_df.iterrows():
         for i_col, date in enumerate(row):
-            dates_nearby = [pd.to_datetime(x) for x in list(filter(lambda x: not pd.isna(pd.to_datetime(x, errors='coerce')), row))] # Consider the other, non-ambiguous dates in each row.
-
             if date == '%AMBIGUOUS_VALID_DATE%': 
+                dates_nearby = [pd.to_datetime(x) for x in list(filter(lambda x: not pd.isna(pd.to_datetime(x, errors='coerce')), row))] # Consider the other, non-ambiguous dates in each row.
+
                 if dates_nearby != []:
                     median_date = dates_nearby[int(len(dates_nearby)/2)].date()
                 else:
