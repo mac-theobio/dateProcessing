@@ -29,7 +29,7 @@ end_date = pd.to_datetime(getmtime(infile), unit='s') # Time of last modificatio
 
 if args.fix_mac[0]:
     print('Casting mac-pre2011 dates to modern dates')
-    for col_name in sheet_0: #change col to col_name
+    for col_name in sheet_0: 
         if col_name.lower().find('date') != -1:
             print('Working on column: ' + col_name)
             recasted = []

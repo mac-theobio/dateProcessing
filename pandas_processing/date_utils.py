@@ -3,7 +3,9 @@ import numpy as np
 from datetime import datetime
 from os.path import getmtime
 from copy import deepcopy
+import dateutil
 
+# TIMESTAMPS on midnight
 def date_recast(date, start_date, end_date):
     date1 = date
     if pd.isna(date1):
@@ -24,8 +26,19 @@ def date_recast(date, start_date, end_date):
     dt_modern =  pd.Timedelta(internal_integer, unit='d') + modern_date
     dt_mac = pd.Timedelta(internal_integer, unit='d') + mac_date
 
-    dt_modern_valid = (dt_modern >= start_date) and (dt_modern <= end_date)
-    dt_mac_valid = (dt_mac >= start_date) and (dt_mac <= end_date)
+    try:
+        str_modern = str(dt_modern.date())
+        alternative_modern = pd.to_datetime(str_modern[:4] + '-' + str_modern[-2:] + '-' + str_modern[5:7]).date()
+        dt_modern_valid = ((dt_modern >= start_date) and (dt_modern <= end_date)) or ((alternative_modern >= start_date) and (alternative_modern <= end_date))
+    except dateutil.parser._parser.ParserError:
+        dt_modern_valid = ((dt_modern >= start_date) and (dt_modern <= end_date))
+
+    try:
+        str_mac = str(dt_mac.date())
+        alternative_mac = pd.to_datetime(str_mac[:4] + '-' + str_mac[-2:] + '-' + str_mac[5:7]).date()
+        dt_mac_valid = ((dt_mac >= start_date) and (dt_mac <= end_date)) or ((alternative_mac >= start_date) and (alternative_mac <= end_date))
+    except dateutil.parser._parser.ParserError:
+        dt_mac_valid = ((dt_mac >= start_date) and (dt_mac <= end_date))
 
     if dt_modern_valid and (not dt_mac_valid):
         return dt_modern.date()
