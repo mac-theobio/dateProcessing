@@ -49,7 +49,7 @@ denali.xlsx: secret/denali.xlsx pandas_processing/clean_dates.py
 	python3 pandas_processing/clean_dates.py $< $@ --sheet_name LineList
 
 example1.xlsx: example/example1_adj.xlsx pandas_processing/clean_dates.py
-	python3 pandas_processing/clean_dates.py $< $@ --sheet_name "LineList (2)"
+	python3 pandas_processing/clean_dates.py $< $@
 
 ######################################################################
 
