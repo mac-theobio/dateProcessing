@@ -11,6 +11,8 @@ parser.add_argument('--fix_mac', dest='fix_mac', nargs=1, action='store', type=i
 parser.add_argument('--infer_cols', dest='infer_cols', nargs=1, action='store', type=int, help='Whether or not to attempt to infer dates from nearby dates in the same column.  0 (False) or 1 (True), default 1', default=[1])
 parser.add_argument('--infer_rows', dest='infer_rows', nargs=1, action='store', type=int, help='Whether or not to attempt to infer dates from nearby dates in the same row.  0 (False) or 1 (True), default 1', default=[1])
 parser.add_argument('--searchrx', dest='searchrx', nargs=1, action='store', type=int, help='Search radius for date inferencing from same column. Default 7', default=[7])
+parser.add_argument('--skiprows', dest='skiprows', nargs=1, action='store', type=int, help='Number of rows to skip at top of excel file. Default 0', default=[0])
+
 args = parser.parse_args()
 
 infile = args.file
@@ -20,20 +22,20 @@ sheet_name = args.sheet_name[0]
 if sheet_name == '%DEFAULT_PARAM%':
     print("No sheet name input; defaulting to first sheet in workbook.")
     sheet_name = 0
-sheet_0 = pd.read_excel(infile, sheet_name=sheet_name)
+sheet_0 = pd.read_excel(infile, sheet_name=sheet_name, skiprows=args.skiprows[0])
 
 start_date = pd.to_datetime(args.init_date[0])
 end_date = pd.to_datetime(getmtime(infile), unit='s') # Time of last modification
 
 if args.fix_mac[0]:
     print('Casting mac-pre2011 dates to modern dates')
-    for col in sheet_0:
-        if col.lower().find('date') != -1:
-            print('Working on column: ' + col)
+    for col_name in sheet_0: #change col to col_name
+        if col_name.lower().find('date') != -1:
+            print('Working on column: ' + col_name)
             recasted = []
-            for date in sheet_0[col]:
+            for date in sheet_0[col_name]:
                 recasted.append(date_recast(date, start_date, end_date))
-            sheet_0[col] = recasted
+            sheet_0[col_name] = recasted
     unambiguous_sheet = sheet_0
 
 if args.infer_cols[0] or args.infer_rows[0]:
