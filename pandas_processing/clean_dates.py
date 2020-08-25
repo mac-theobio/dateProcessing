@@ -103,7 +103,7 @@ else:
                 column_explanation = explanation_sheet[col]
 
             completed_df[col+'_explanations'] = column_explanation
-    completed_df = completed_df.fillna("Not a date")
+    completed_df = completed_df.fillna("NA")
 
     from openpyxl import Workbook
     from openpyxl.utils.dataframe import dataframe_to_rows
