@@ -5,6 +5,8 @@ from os.path import getmtime
 from copy import deepcopy
 import dateutil
 
+# TIMESTAMPS on midnight
+
 def date_recast(date, start_date, end_date):
     date1 = date
     if pd.isna(date1):
@@ -108,6 +110,7 @@ def get_unambiguous_date_values(col, initial_valid_date, final_valid_date):
             explanation_column.append("")#"Error: Either no value given or not detected as a date.")
     return this_column, explanation_column
 
+
 # %%
 def line_fill_ambiguous_date(ambiguous_column, original_column, searchradius = 5):
     """ 
@@ -140,7 +143,7 @@ def line_fill_ambiguous_date(ambiguous_column, original_column, searchradius = 5
             # If there doesn't exist dates nearby, we have to leave it ambiguous for now. 
             if pd.isna(median_date):
                 new_column.append('%AMBIGUOUS_VALID_DATE%')
-                explanation_column.append('Ambiguous: No unambiguous nearby dates in the same column on this iteration.')
+                explanation_column.append('Ambiguous: No unambiguous nearby dates on this iteration.')
             else:
                 # If the median date exists, take the possible date which is closer to the median date. 
   
@@ -185,11 +188,12 @@ def row_fill_ambiguous_date(ambiguous_df, original_df):
             if date == '%AMBIGUOUS_VALID_DATE%': 
                 dates_nearby = [pd.to_datetime(x) for x in list(filter(lambda x: not pd.isna(pd.to_datetime(x, errors='coerce')), row))] # Consider the other, non-ambiguous dates in each row.
                 dates_nearby = list(filter(lambda x: (x - zero_stamp).days > 0, dates_nearby))
-
                 if dates_nearby != []:
                     median_date = dates_nearby[int(len(dates_nearby)/2)].date()
                 else:
                     median_date = np.nan
+
+
 
                 if not pd.isna(median_date):
                     original_date = pd.to_datetime(original_df.iloc[i_row][i_col], errors='coerce').date() 
@@ -198,11 +202,15 @@ def row_fill_ambiguous_date(ambiguous_df, original_df):
                     
                     if np.abs(original_date - median_date) < np.abs(alternative_date - median_date):
                         row[new_df.columns[i_col]] = original_date
+                        explanation_df[explanation_df.columns[i_col], i_row] = 'Inferred: this date version is closer to the nearby dates in this row. Confidence: ' + str(np.abs(np.abs(alternative_date - median_date) - np.abs(original_date - median_date)))
                     else:
                         row[new_df.columns[i_col]] = alternative_date
+                        explanation_df[explanation_df.columns[i_col], i_row] = 'Inferred: this date version is closer to the nearby dates in this row. Confidence: ' + str(np.abs(np.abs(alternative_date - median_date) - np.abs(original_date - median_date)))
+                    
                     new_df.iloc[i_row] = row
-                    explanation_df.iloc[i_row, i_col] = "Inferred: using nearby dates in same row. Confidence: " + str(np.abs(np.abs(original_date - median_date) - np.abs(alternative_date - median_date)))
+                #    explanation_df.iloc[i_row] = explanation_row
                 else:
                     new_df.iloc[i_row, i_col] ='%AMBIGUOUS_VALID_DATE%'
-
+                    explanation_df.iloc[i_row, i_col] = 'Ambiguous: no nearby dates in the same row.'
+               
     return new_df, explanation_df
