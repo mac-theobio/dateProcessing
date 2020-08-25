@@ -65,6 +65,7 @@ def get_unambiguous_date_values(col, initial_valid_date, final_valid_date):
     for i, date in enumerate(col):
         converted_first_datetime = pd.to_datetime(date, errors='coerce').date() # Attempt to coerce each cell to datetime format.
 
+
         if not pd.isna(converted_first_datetime):  # If time cannot be coerced to datetime, then it cannot be unambiguous.
             is_original_valid = (converted_first_datetime >= initial_valid_date) and (converted_first_datetime <= final_valid_date)
 
@@ -162,12 +163,15 @@ def row_fill_ambiguous_date(ambiguous_df, original_df):
         list
     """
     new_df = deepcopy(ambiguous_df)
+    zero_stamp = pd.to_datetime('Jan 01, 2020')
 
     for i_row, row in new_df.iterrows():
         for i_col, date in enumerate(row):
             if date == '%AMBIGUOUS_VALID_DATE%': 
                 dates_nearby = [pd.to_datetime(x) for x in list(filter(lambda x: not pd.isna(pd.to_datetime(x, errors='coerce')), row))] # Consider the other, non-ambiguous dates in each row.
-
+                dates_nearby = list(filter(lambda x: (x - zero_stamp).days > 0, dates_nearby))
+                print(dates_nearby)
+                print(i_row)
                 if dates_nearby != []:
                     median_date = dates_nearby[int(len(dates_nearby)/2)].date()
                 else:

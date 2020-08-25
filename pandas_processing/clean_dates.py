@@ -44,7 +44,7 @@ if args.infer_cols[0] or args.infer_rows[0]:
     print('Getting unambiguous dates.')
     unambiguous_sheet = pd.DataFrame()
     for col in sheet_0.columns:
-        if col.find('date') != -1:
+        if col.lower().find('date') != -1:
             unambiguous_sheet[col] =get_unambiguous_date_values(sheet_0[col], start_date, end_date)
         else: 
             unambiguous_sheet[col] = sheet_0[col]
@@ -54,7 +54,7 @@ if args.infer_cols[0] or args.infer_rows[0]:
         print('Inferring columns.')
         for col in sheet_0.columns:
             i = 0
-            if col.find('date') != -1:
+            if col.lower().find('date') != -1:
                 last_col_version = deepcopy(unambiguous_sheet[col]).tolist()
                 new_col = line_fill_ambiguous_date(unambiguous_sheet[col], sheet_0[col], args.searchrx[0])
 
@@ -67,6 +67,7 @@ if args.infer_cols[0] or args.infer_rows[0]:
                 unambiguous_sheet[col] = new_col
                 print(col +' has been modified '+str(i) + ' times by iterative column fill method')
     if args.infer_rows[0]:
+        print(unambiguous_sheet)
         print('Inferring rows.')
         unambiguous_sheet = row_fill_ambiguous_date(unambiguous_sheet, sheet_0)
 else:
