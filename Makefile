@@ -12,6 +12,8 @@ vim_session:
 
 Sources += Makefile README.md
 
+alldirs += pandas_processing
+
 ######################################################################
 
 Ignore += secret
